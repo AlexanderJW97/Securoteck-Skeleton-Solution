@@ -1,0 +1,7 @@
+D:\Libraries\Documents\University Year 3\08346_Distributed_Systems_Programming\ACW\Securoteck Skeleton Solution\SecuroteckClient\bin\Debug\SecuroteckClient.exe.config
+D:\Libraries\Documents\University Year 3\08346_Distributed_Systems_Programming\ACW\Securoteck Skeleton Solution\SecuroteckClient\bin\Debug\SecuroteckClient.exe
+D:\Libraries\Documents\University Year 3\08346_Distributed_Systems_Programming\ACW\Securoteck Skeleton Solution\SecuroteckClient\bin\Debug\SecuroteckClient.pdb
+D:\Libraries\Documents\University Year 3\08346_Distributed_Systems_Programming\ACW\Securoteck Skeleton Solution\SecuroteckClient\obj\Debug\SecuroteckClient.csprojResolveAssemblyReference.cache
+D:\Libraries\Documents\University Year 3\08346_Distributed_Systems_Programming\ACW\Securoteck Skeleton Solution\SecuroteckClient\obj\Debug\SecuroteckClient.csproj.CoreCompileInputs.cache
+D:\Libraries\Documents\University Year 3\08346_Distributed_Systems_Programming\ACW\Securoteck Skeleton Solution\SecuroteckClient\obj\Debug\SecuroteckClient.exe
+D:\Libraries\Documents\University Year 3\08346_Distributed_Systems_Programming\ACW\Securoteck Skeleton Solution\SecuroteckClient\obj\Debug\SecuroteckClient.pdb
