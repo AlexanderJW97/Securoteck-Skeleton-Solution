@@ -12,6 +12,7 @@ namespace SecuroteckWebApplication.Controllers
     {
         public override void OnActionExecuting(HttpActionContext actionContext)
         {
+
             if(!Thread.CurrentPrincipal.Identity.IsAuthenticated) // If the principle.identity on the current thread is not authenticated
             {
                 // Respond with an 'Unauthorised' status code and error

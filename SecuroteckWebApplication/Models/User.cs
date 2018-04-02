@@ -40,7 +40,7 @@ namespace SecuroteckWebApplication.Models
         /// </summary>
         /// <param name="username">the chosen name for the new user</param>
         /// <returns></returns>
-        public string NewUser(string username)
+        public static string NewUser(string username)
         {
             Guid id = Guid.NewGuid();
             string idString = id.ToString();
@@ -49,6 +49,7 @@ namespace SecuroteckWebApplication.Models
             {
                 User user = new User() { UserName = username, ApiKey = idString  };
                 db.Users.Add(user);
+                db.SaveChanges();
                 db.Dispose();
             }
 
@@ -56,11 +57,31 @@ namespace SecuroteckWebApplication.Models
         }
 
         /// <summary>
+        /// Checks for the existence of a user in the database using a given username
+        /// </summary>
+        /// <param name="username">username of user being searched for</param>
+        /// <returns></returns>
+        public static bool checkUserName(string username)
+        {
+            bool userExists = false;
+
+            using (var db = new UserContext())
+            {
+                if (db.Users.Any(o => o.UserName == username))
+                {
+                    userExists = true;
+                }
+                db.Dispose();
+            }
+            return userExists;
+        }
+
+        /// <summary>
         /// Checks for the existence of a user in the database using a given ApiKey
         /// </summary>
         /// <param name="ApiKey">ApiKey of user being searched for</param>
         /// <returns></returns>
-        public bool checkUserKey(string ApiKey)
+        public static bool checkUserKey(string ApiKey)
         {
             bool userExists = false;
 
@@ -83,17 +104,17 @@ namespace SecuroteckWebApplication.Models
         /// <returns></returns>
         public bool checkUserKeyandName(string ApiKey, string username)
         {
-            bool userExists = false;
+            bool userDoesExist = false;
 
             using (var db = new UserContext())
             {
                 if ((db.Users.Any(o => o.ApiKey == ApiKey)) && (db.Users.Any(o => o.UserName == username)))
                 {
-                    userExists = true;
+                    userDoesExist = true;
                 }
                 db.Dispose();
             }
-            return userExists;
+            return userDoesExist;
         }
 
         /// <summary>
@@ -101,7 +122,7 @@ namespace SecuroteckWebApplication.Models
         /// </summary>
         /// <param name="ApiKey">api key of user being searched for</param>
         /// <returns></returns>
-        public User checkUserRtnUsr(string ApiKey)
+        public static User checkUserRtnUsr(string ApiKey)
         {
             User user;
             using (var db = new UserContext())
@@ -121,7 +142,7 @@ namespace SecuroteckWebApplication.Models
         /// deleted a user from the database
         /// </summary>
         /// <param name="ApiKey">api key of user to be deleted</param>
-        public void deleteUser(string ApiKey)
+        public static void deleteUser(string ApiKey)
         {
             User user;
             using (var db = new UserContext())
