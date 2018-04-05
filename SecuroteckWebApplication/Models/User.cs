@@ -29,6 +29,7 @@ namespace SecuroteckWebApplication.Models
     // TODO: You may find it useful to add code here for Log
     #endregion
 
+    
     public class UserDatabaseAccess
     {
         #region Task3 
@@ -40,6 +41,7 @@ namespace SecuroteckWebApplication.Models
         /// </summary>
         /// <param name="username">the chosen name for the new user</param>
         /// <returns></returns>
+        
         public static string NewUser(string username)
         {
             Guid id = Guid.NewGuid();
@@ -52,7 +54,6 @@ namespace SecuroteckWebApplication.Models
                 db.SaveChanges();
                 db.Dispose();
             }
-
             return idString;
         }
 
@@ -96,7 +97,7 @@ namespace SecuroteckWebApplication.Models
                 return userExists;
         }
 
-        /// <summary>
+        /// <summary>anyt   
         /// Checks for the existence of a user in the database using a given ApiKey and username 
         /// </summary>
         /// <param name="ApiKey">api key of user being searched</param>

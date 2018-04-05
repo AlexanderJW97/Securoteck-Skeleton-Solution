@@ -7,6 +7,7 @@ using System.Web.Http.Filters;
 
 namespace SecuroteckWebApplication.Controllers
 {
+    
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public class CustomAuthoriseAttribute : ActionFilterAttribute
     {

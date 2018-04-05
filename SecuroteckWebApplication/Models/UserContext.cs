@@ -13,6 +13,7 @@ namespace SecuroteckWebApplication.Models
             Database.SetInitializer(new MigrateDatabaseToLatestVersion<UserContext, Migrations.Configuration>());
         }
 
+        
         public DbSet<User> Users { get; set; }
         
         //TODO: Task11
@@ -21,5 +22,7 @@ namespace SecuroteckWebApplication.Models
         {
             base.OnModelCreating(modelBuilder);
         }
+
+        
     }
 }

@@ -1,4 +1,4 @@
-﻿+﻿using SecuroteckWebApplication.Models;
+﻿﻿using SecuroteckWebApplication.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +13,6 @@ namespace SecuroteckWebApplication.Controllers
     public class UserController : ApiController
     {
         [ActionName("New")]
-        [CustomAuthorise()]
         public HttpResponseMessage Get(HttpResponseMessage request, string username)
         {
             string response = "";
