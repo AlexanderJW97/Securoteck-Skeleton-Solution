@@ -52,5 +52,27 @@ namespace SecuroteckWebApplication.Controllers
             return Request.CreateResponse<string>(statusCode, response);
 
         }
+
+        [CustomAuthorise]
+        [HttpDelete]
+        [ActionName("removeuser")]
+        public bool Delete([FromUri]string username, HttpRequestMessage request)
+        {
+            string apiKey = request.Headers.GetValues("ApiKey").FirstOrDefault();
+            
+            bool userDeleted = false;
+            
+            try
+            {
+                UserDatabaseAccess.deleteUser(apiKey);
+                userDeleted = true;
+            }
+            catch (Exception e)
+            {
+                userDeleted = false;
+            }
+            
+            return userDeleted;
+        }
     }
 }

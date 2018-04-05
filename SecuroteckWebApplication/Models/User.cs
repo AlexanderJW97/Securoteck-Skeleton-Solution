@@ -154,7 +154,9 @@ namespace SecuroteckWebApplication.Models
                             select p;
 
                 user = query.Single();
+                db.Users.Attach(user);
                 db.Users.Remove(user);
+                db.SaveChanges();
                 db.Dispose();
             }
         }
