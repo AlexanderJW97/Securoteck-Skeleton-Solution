@@ -6,14 +6,384 @@ using System.Threading.Tasks;
 using System.Net;
 using System.Net.Http;
 
+
+
 namespace SecuroteckClient
 {
     #region Task 8 and beyond
     class Client
     {
+        private static string request = "";
+        private static int portNumber = 24702;
+        private static string controller = "";
+        private static string action = "";
+        private static string[] function = new string[2];
+        private static string requestForServer = "";
+        private static string storedUsername = "";
+        private static string storedApiKey = "";
+        private static bool userExitRequest = false;
+        private static int numRequests = 0;
+        
+
+
+
         static void Main(string[] args)
         {
+            
+
+
+            request = Start();
+
+            do
+            {
+                HttpClient client = new HttpClient();
+                client.BaseAddress = new Uri("http://localhost:" + portNumber + "/api/");
+                client.Timeout = TimeSpan.FromMilliseconds(20000);
+                //client.MaxResponseContentBufferSize = 
+
+                if (numRequests > 0)
+                    request = Restart();
+
+                string determineFunctionString = DetermineFunction(request);
+
+                if (determineFunctionString != "Exit")
+                {
+                    function = determineFunctionString.Split('/');
+                    requestForServer = launchFunction(function, request);
+                    RunAsync(requestForServer, client).Wait();
+                    Console.ReadKey();
+                }
+                else
+                {
+                    userExitRequest = true;
+                }
+
+
+            } while (userExitRequest == false);
+
         }
+
+        /// <summary>
+        /// Starts the client by asking what they want to do
+        /// </summary>
+        /// <returns>returns the user input</returns>
+        static string Start()
+        {
+            Console.WriteLine("Hello. What would you like to do?");
+            return Console.ReadLine();
+        }
+
+        static string Restart()
+        {
+            Console.WriteLine("What would you like to do next?");
+            string request = Console.ReadLine();
+            Console.Clear();
+            requestForServer = "";
+            return request;
+            
+        }
+
+        /// <summary>
+        /// Determines the function the user has asked for
+        /// </summary>
+        /// <param name="request">the users input</param>
+        /// <returns>returns a string consisting of the controller name and the action to be performed, split with a backslash</returns>
+        static string DetermineFunction(string request)
+        {
+            string function = "";
+
+            if (request == "Exit")
+            {
+                function = request;
+            }
+            else if (request != "") 
+            {
+                string[] requestParts = request.Split(' ');
+                controller = requestParts[0];
+                action = requestParts[1];
+                function = controller + "/" + action;
+            }
+            return function;
+            
+        }
+
+        /// <summary>
+        /// Launches the required method in order to build a request
+        /// </summary>
+        /// <param name="function">the string array containing the action and controller</param>
+        /// <param name="originalRequest">the original request sent by the user</param>
+        /// <returns>returns the request for the server</returns>
+        static string launchFunction(string[] function, string originalRequest)
+        {
+            string request = "";
+            string controller = function[0];
+            string action = function[1];
+            switch (controller)
+            {
+                case "TalkBack":
+                    switch(action)
+                    {
+                        case "Hello":
+                            controller = "talkback";
+                            action = "hello";
+                            request = TalkbackHello(controller, action);
+                            break;
+                        case "Sort":
+                            controller = "talkback";
+                            action = "sort";
+                            request = TalkbackSort(originalRequest, controller, action);
+                            break;
+                    }
+                    break;
+
+                case "User":
+                    {
+                        switch(action)
+                        {
+                            case "Get":
+                                controller = "user";
+                                action = "new";
+                                request = UserGet(controller, action, originalRequest);
+                                break;
+                            case "Set":
+                                UserSet(originalRequest);
+                                break;
+                            case "Post":
+                                controller = "user";
+                                action = "new";
+                                request = UserPost(controller, action, originalRequest);
+                                break;
+                            case "Delete":
+                                controller = "user";
+                                action = "delete";
+                                request = UserDelete(controller, action, originalRequest);
+                                break;
+                        }
+                    }
+                    break;
+
+                case "Protected":
+                    {
+                        switch (action)
+                        {
+                            case "Hello":
+                                controller = "protected";
+                                action = "hello";
+                                request = ProtectedHello(controller, action);
+                                break;
+                            case "SHA1":
+                                controller = "protected";
+                                action = "sha1";
+                                request = ProtectedSHA1(controller, action, originalRequest);
+                                break;
+                            case "SHA256":
+                                controller = "protected";
+                                action = "sha256";
+                                request = ProtectedSHA256(controller, action, originalRequest);
+                                break;
+                        }
+                    }
+                    break;
+
+            }
+            return request;
+
+        }
+
+        private static string ProtectedSHA1(string controller, string action, string originalRequest)
+        {
+            string[] requestParts = originalRequest.Split(' ');
+            string message = requestParts[2];
+
+            if (storedApiKey == "")
+            {
+                Console.WriteLine("You need to do a User Post or User Set first");
+            }
+            else
+            {
+                requestForServer += controller + "/" + action + "?message=" + message;
+            }
+            return requestForServer;
+        }
+
+        private static string ProtectedSHA256(string controller, string action, string originalRequest)
+        {
+            string[] requestParts = originalRequest.Split(' ');
+            string message = requestParts[2];
+
+            if (storedApiKey == "")
+            {
+                Console.WriteLine("You need to do a User Post or User Set first");
+            }
+            else
+            {
+                requestForServer += controller + "/" + action + "?message=" + message;
+            }
+            return requestForServer;
+        }
+
+        private static string ProtectedHello(string controller, string action)
+        {
+            if (storedApiKey == "")
+            {
+                Console.WriteLine("You need to do a User Post or User Set first");
+            }
+            else
+            {
+                requestForServer += controller + "/" + action;
+            }
+            return requestForServer;
+        }
+
+        private static string UserDelete(string controller, string action, string originalRequest)
+        {
+            string[] requestParts = originalRequest.Split(' ');
+
+            if (storedUsername == "" && storedApiKey == "")
+            {
+                Console.WriteLine("You need to do a User Post or User Set ");
+            }
+            requestForServer += controller + "/" + action + "?username=" + storedUsername; 
+
+            return requestForServer;
+        }
+
+        private static string UserPost(string controller, string action, string originalRequest)
+        {
+            string[] requestParts = originalRequest.Split(' ');
+
+            string username = requestParts[2];
+
+            requestForServer += controller + "/" + action;
+
+            return requestForServer;
+        }
+
+        private static void UserSet(string originalRequest)
+        {
+            string response = "";
+            try
+            {
+                string[] requestParts = originalRequest.Split(' ');
+                storedUsername = requestParts[2];
+                storedApiKey = requestParts[3];
+                response = "Stored";
+            }
+            catch
+            {
+                response = "Username and ApiKey could not be saved.";
+            }
+            Console.WriteLine(response);
+        }
+
+        private static string UserGet(string controller, string action, string originalRequest)
+        {
+            string[] requestParts = originalRequest.Split(' ');
+            string username = "";
+            username = requestParts[2];
+            requestForServer += controller + "/new?username=" + username;
+            return requestForServer;
+        }
+
+        private static string TalkbackHello(string controller, string action)
+        {
+            requestForServer += controller + "/" + action;
+            return requestForServer;
+        }
+
+        static string TalkbackSort(string originalRequest, string controller, string action)
+        {
+            string[] requestParts = originalRequest.Split(' ');
+
+            int numInts = 0;
+
+            foreach (char c in requestParts[2])
+            {
+                if (char.IsDigit(c))
+                {
+                    numInts++;
+                }
+            }
+
+            string[] sortInts = (requestParts[2].ToString()).Split(',');
+
+            string sortIntsString = "";
+
+            int i = 0;
+
+            foreach (string s in sortInts)
+            {
+                foreach(char c in s)
+                {
+                    if (char.IsDigit(c))
+                        sortIntsString += c.ToString();
+                        
+                }
+                sortInts[i] = sortIntsString;
+                sortIntsString = "";
+                i++;
+            }
+
+            int k = 0;
+
+            foreach (string j in sortInts)
+            {
+                string integer = "";
+
+                if (k != 0)
+                {
+                    integer = "&integers=" + j.ToString();
+                    sortIntsString += integer;
+                }
+                else
+                {
+                    integer = "integers=" + j.ToString();
+                    sortIntsString += integer;
+                }
+                k++;
+            }
+
+            requestForServer += controller + "/" + action + "?" + sortIntsString;
+            return requestForServer;
+
+        }
+
+        static async Task RunAsync(string requestForServer, HttpClient client)
+        {
+            HttpClient runAsyncClient = client;
+
+            try
+            {
+                Task<string> task = GetStringAsync(requestForServer, runAsyncClient);
+                
+                if (await Task.WhenAny(task, Task.Delay(20000)) == task)
+                {
+                    Console.WriteLine(task.Result);
+                    numRequests++;
+                }
+                else
+                {
+                    Console.WriteLine("Request timed out");
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.GetBaseException().Message);
+            }
+
+        }
+
+        static async Task<string> GetStringAsync(string path, HttpClient client)
+        {
+            Console.WriteLine("...please wait...");
+            string responseString = "";
+            HttpResponseMessage response = await client.GetAsync(path);
+            responseString = await response.Content.ReadAsStringAsync();
+            
+            return responseString;
+        }
+
+
     }
     #endregion
 }
