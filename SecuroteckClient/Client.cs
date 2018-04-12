@@ -23,13 +23,13 @@ namespace SecuroteckClient
         private static string storedApiKey = "";
         private static bool userExitRequest = false;
         private static int numRequests = 0;
-        
+        private static string userPostName = "";
 
 
 
         static void Main(string[] args)
         {
-            
+
 
 
             request = Start();
@@ -50,7 +50,7 @@ namespace SecuroteckClient
                 {
                     function = determineFunctionString.Split('/');
                     requestForServer = launchFunction(function, request);
-                    RunAsync(requestForServer, client).Wait();
+                    RunAsync(requestForServer, client, function[0], function[1]).Wait();
                     Console.ReadKey();
                 }
                 else
@@ -80,7 +80,7 @@ namespace SecuroteckClient
             Console.Clear();
             requestForServer = "";
             return request;
-            
+
         }
 
         /// <summary>
@@ -96,7 +96,7 @@ namespace SecuroteckClient
             {
                 function = request;
             }
-            else if (request != "") 
+            else if (request != "")
             {
                 string[] requestParts = request.Split(' ');
                 controller = requestParts[0];
@@ -104,7 +104,7 @@ namespace SecuroteckClient
                 function = controller + "/" + action;
             }
             return function;
-            
+
         }
 
         /// <summary>
@@ -121,7 +121,7 @@ namespace SecuroteckClient
             switch (controller)
             {
                 case "TalkBack":
-                    switch(action)
+                    switch (action)
                     {
                         case "Hello":
                             controller = "talkback";
@@ -138,7 +138,7 @@ namespace SecuroteckClient
 
                 case "User":
                     {
-                        switch(action)
+                        switch (action)
                         {
                             case "Get":
                                 controller = "user";
@@ -243,7 +243,7 @@ namespace SecuroteckClient
             {
                 Console.WriteLine("You need to do a User Post or User Set ");
             }
-            requestForServer += controller + "/" + action + "?username=" + storedUsername; 
+            requestForServer += controller + "/" + action + "?username=" + storedUsername;
 
             return requestForServer;
         }
@@ -252,7 +252,7 @@ namespace SecuroteckClient
         {
             string[] requestParts = originalRequest.Split(' ');
 
-            string username = requestParts[2];
+            userPostName = requestParts[2];
 
             requestForServer += controller + "/" + action;
 
@@ -313,11 +313,11 @@ namespace SecuroteckClient
 
             foreach (string s in sortInts)
             {
-                foreach(char c in s)
+                foreach (char c in s)
                 {
                     if (char.IsDigit(c))
                         sortIntsString += c.ToString();
-                        
+
                 }
                 sortInts[i] = sortIntsString;
                 sortIntsString = "";
@@ -348,23 +348,77 @@ namespace SecuroteckClient
 
         }
 
-        static async Task RunAsync(string requestForServer, HttpClient client)
+        static async Task RunAsync(string requestForServer, HttpClient client, string controller, string action)
         {
             HttpClient runAsyncClient = client;
 
             try
             {
-                Task<string> task = GetStringAsync(requestForServer, runAsyncClient);
-                
-                if (await Task.WhenAny(task, Task.Delay(20000)) == task)
+
+                Task<string> task;
+
+                switch (controller)
                 {
-                    Console.WriteLine(task.Result);
-                    numRequests++;
+                    case "talkback":
+                        {
+                            task = GetStringAsync(requestForServer, runAsyncClient);
+                            if (await Task.WhenAny(task, Task.Delay(20000)) == task)
+                            {
+                                Console.WriteLine(task.Result);
+                                numRequests++;
+                            }
+                            else
+                            {
+                                Console.WriteLine("Request timed out");
+                            }
+
+                        }
+                        break;
+                    case "user":
+                        {
+                            switch (action)
+                            {
+                                case "get":
+                                    {
+                                        task = GetStringAsync(requestForServer, runAsyncClient);
+                                        if (await Task.WhenAny(task, Task.Delay(20000)) == task)
+                                        {
+                                            Console.WriteLine(task.Result);
+                                            numRequests++;
+                                        }
+                                        else
+                                        {
+                                            Console.WriteLine("Request timed out");
+                                        }
+                                        break;
+                                    }
+                                case "set":
+                                    break;
+                                case "post":
+                                    {
+                                        task = PostStringAsync(requestForServer, runAsyncClient, userPostName);
+                                        if (await Task.WhenAny(task, Task.Delay(20000)) == task)
+                                        {
+                                            Console.WriteLine(task.Result);
+                                            numRequests++;
+                                        }
+                                        else
+                                        {
+                                            Console.WriteLine("Request timed out");
+                                        }
+                                        break;
+                                    }
+                                    
+                                case "delete":
+                                    break;
+                            }
+                            break;
+                        }
+                    case "protected":
+                        break;
                 }
-                else
-                {
-                    Console.WriteLine("Request timed out");
-                }
+
+
             }
             catch (Exception e)
             {
@@ -379,10 +433,53 @@ namespace SecuroteckClient
             string responseString = "";
             HttpResponseMessage response = await client.GetAsync(path);
             responseString = await response.Content.ReadAsStringAsync();
-            
+
             return responseString;
         }
 
+        static async Task<string> PostStringAsync(string path, HttpClient client, string requestBody)
+        {
+            Console.WriteLine("...please wait...");
+            string responseString = "";
+
+            HttpContent requestContent = HttpContent.;
+
+
+            HttpResponseMessage response = await client.PostAsync(path, HttpContent);
+            responseString = await response.Content.ReadAsStringAsync();
+
+            return responseString;
+        }
+
+        static async Task<string> SetStringAsync(string path, HttpClient client, string requestBody)
+        {
+            Console.WriteLine("...please wait...");
+            string responseString = "";
+            HttpResponseMessage response = await client.PutAsync(path, HttpContent);
+            responseString = await response.Content.ReadAsStringAsync();
+
+
+            return responseString;
+        }
+        static async Task<bool> DeleteAsync(string path, HttpClient client, string requestBody)
+        {
+            Console.WriteLine("...please wait...");
+            bool userDeleted = false;
+            HttpResponseMessage response = await client.DeleteAsync(path, HttpContent);
+            string userDeletedStr = await response.Content.ReadAsStringAsync();
+
+            switch (userDeletedStr)
+            {
+                case "true":
+                    userDeleted = true;
+                    break;
+                case "false":
+                    userDeleted = false;
+                    break;
+            }
+
+            return userDeleted;
+        }
 
     }
     #endregion
