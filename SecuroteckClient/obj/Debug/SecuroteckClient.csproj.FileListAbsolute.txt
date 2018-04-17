@@ -5,3 +5,8 @@ D:\Libraries\Documents\University Year 3\08346_Distributed_Systems_Programming\A
 D:\Libraries\Documents\University Year 3\08346_Distributed_Systems_Programming\ACW\Securoteck Skeleton Solution\SecuroteckClient\obj\Debug\SecuroteckClient.csproj.CoreCompileInputs.cache
 D:\Libraries\Documents\University Year 3\08346_Distributed_Systems_Programming\ACW\Securoteck Skeleton Solution\SecuroteckClient\obj\Debug\SecuroteckClient.exe
 D:\Libraries\Documents\University Year 3\08346_Distributed_Systems_Programming\ACW\Securoteck Skeleton Solution\SecuroteckClient\obj\Debug\SecuroteckClient.pdb
+D:\Libraries\Documents\University Year 3\08346_Distributed_Systems_Programming\ACW\Securoteck Skeleton Solution\SecuroteckClient\bin\Debug\Newtonsoft.Json.dll
+D:\Libraries\Documents\University Year 3\08346_Distributed_Systems_Programming\ACW\Securoteck Skeleton Solution\SecuroteckClient\bin\Debug\System.Net.Http.Formatting.dll
+D:\Libraries\Documents\University Year 3\08346_Distributed_Systems_Programming\ACW\Securoteck Skeleton Solution\SecuroteckClient\bin\Debug\Newtonsoft.Json.xml
+D:\Libraries\Documents\University Year 3\08346_Distributed_Systems_Programming\ACW\Securoteck Skeleton Solution\SecuroteckClient\bin\Debug\System.Net.Http.Formatting.xml
+D:\Libraries\Documents\University Year 3\08346_Distributed_Systems_Programming\ACW\Securoteck Skeleton Solution\SecuroteckClient\obj\Debug\SecuroteckClient.csproj.CopyComplete

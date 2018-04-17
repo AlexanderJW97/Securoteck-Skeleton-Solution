@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Formatting;
 
 
 
@@ -50,7 +51,7 @@ namespace SecuroteckClient
                 {
                     function = determineFunctionString.Split('/');
                     requestForServer = launchFunction(function, request);
-                    RunAsync(requestForServer, client, function[0], function[1]).Wait();
+                    RunAsync(requestForServer, client, controller, action).Wait();
                     Console.ReadKey();
                 }
                 else
@@ -116,8 +117,8 @@ namespace SecuroteckClient
         static string launchFunction(string[] function, string originalRequest)
         {
             string request = "";
-            string controller = function[0];
-            string action = function[1];
+            controller = function[0];
+            action = function[1];
             switch (controller)
             {
                 case "TalkBack":
@@ -351,6 +352,9 @@ namespace SecuroteckClient
         static async Task RunAsync(string requestForServer, HttpClient client, string controller, string action)
         {
             HttpClient runAsyncClient = client;
+            runAsyncClient.DefaultRequestHeaders.Accept.Add(
+                new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+
 
             try
             {
@@ -394,7 +398,7 @@ namespace SecuroteckClient
                                     }
                                 case "set":
                                     break;
-                                case "post":
+                                case "new":
                                     {
                                         task = PostStringAsync(requestForServer, runAsyncClient, userPostName);
                                         if (await Task.WhenAny(task, Task.Delay(20000)) == task)
@@ -441,17 +445,14 @@ namespace SecuroteckClient
         {
             Console.WriteLine("...please wait...");
             string responseString = "";
-
-            HttpContent requestContent = HttpContent.;
-
-
-            HttpResponseMessage response = await client.PostAsync(path, HttpContent);
+            StringContent request = new StringContent(requestBody);
+            HttpResponseMessage response = await client.PostAsJsonAsync(path, request);
             responseString = await response.Content.ReadAsStringAsync();
 
             return responseString;
         }
 
-        static async Task<string> SetStringAsync(string path, HttpClient client, string requestBody)
+        /*static async Task<string> SetStringAsync(string path, HttpClient client, string requestBody)
         {
             Console.WriteLine("...please wait...");
             string responseString = "";
@@ -479,7 +480,7 @@ namespace SecuroteckClient
             }
 
             return userDeleted;
-        }
+        }*/
 
     }
     #endregion
