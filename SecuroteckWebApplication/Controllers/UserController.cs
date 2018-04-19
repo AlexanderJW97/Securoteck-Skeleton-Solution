@@ -32,11 +32,9 @@ namespace SecuroteckWebApplication.Controllers
         }
 
         [ActionName("New")]
-        public HttpResponseMessage Post([FromBody]JToken jtoken)
+        public HttpResponseMessage Post([FromBody]string username)
         {
             HttpStatusCode statusCode = HttpStatusCode.BadRequest;
-            string username = jtoken["username"].ToObject<string>();
-
             string response = "";
             if (username == null)
             {
@@ -46,7 +44,8 @@ namespace SecuroteckWebApplication.Controllers
             else if (!(username == ""))
             {
                 response = UserDatabaseAccess.NewUser(username); //sets the newly generated apikey for a new user to the response
-                statusCode = HttpStatusCode.OK;
+                    statusCode = HttpStatusCode.OK;
+                
             }
 
             return Request.CreateResponse<string>(statusCode, response);

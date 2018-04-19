@@ -21,7 +21,7 @@ namespace SecuroteckClient
         private static string[] function = new string[2];
         private static string requestForServer = "";
         private static string storedUsername = "";
-        private static string storedApiKey = "";
+        private static Guid storedApiKey;
         private static bool userExitRequest = false;
         private static int numRequests = 0;
         private static string userPostName = "";
@@ -52,7 +52,6 @@ namespace SecuroteckClient
                     function = determineFunctionString.Split('/');
                     requestForServer = launchFunction(function, request);
                     RunAsync(requestForServer, client, controller, action).Wait();
-                    Console.ReadKey();
                 }
                 else
                 {
@@ -195,8 +194,8 @@ namespace SecuroteckClient
         {
             string[] requestParts = originalRequest.Split(' ');
             string message = requestParts[2];
-
-            if (storedApiKey == "")
+            string storedApiKeyStr = storedApiKey.ToString();
+            if (storedApiKeyStr == "")
             {
                 Console.WriteLine("You need to do a User Post or User Set first");
             }
@@ -211,8 +210,8 @@ namespace SecuroteckClient
         {
             string[] requestParts = originalRequest.Split(' ');
             string message = requestParts[2];
-
-            if (storedApiKey == "")
+            string storedApiKeyStr = storedApiKey.ToString();
+            if (storedApiKeyStr == "")
             {
                 Console.WriteLine("You need to do a User Post or User Set first");
             }
@@ -225,7 +224,8 @@ namespace SecuroteckClient
 
         private static string ProtectedHello(string controller, string action)
         {
-            if (storedApiKey == "")
+            string storedApiKeyStr = storedApiKey.ToString();
+            if (storedApiKeyStr == "")
             {
                 Console.WriteLine("You need to do a User Post or User Set first");
             }
@@ -240,11 +240,12 @@ namespace SecuroteckClient
         {
             string[] requestParts = originalRequest.Split(' ');
 
-            if (storedUsername == "" && storedApiKey == "")
+            string storedApiKeyStr = storedApiKey.ToString();
+            if (storedUsername == "" && storedApiKeyStr == "")
             {
                 Console.WriteLine("You need to do a User Post or User Set ");
             }
-            requestForServer += controller + "/" + action + "?username=" + storedUsername;
+            requestForServer += controller + "/removeuser?username=" + storedUsername;
 
             return requestForServer;
         }
@@ -267,7 +268,7 @@ namespace SecuroteckClient
             {
                 string[] requestParts = originalRequest.Split(' ');
                 storedUsername = requestParts[2];
-                storedApiKey = requestParts[3];
+                storedApiKey = Guid.Parse(requestParts[3]);
                 response = "Stored";
             }
             catch
@@ -359,16 +360,19 @@ namespace SecuroteckClient
             try
             {
 
-                Task<string> task;
+                Task<string> taskStr;
+                Task<bool> taskBool;
+
+
 
                 switch (controller)
                 {
                     case "talkback":
                         {
-                            task = GetStringAsync(requestForServer, runAsyncClient);
-                            if (await Task.WhenAny(task, Task.Delay(20000)) == task)
+                            taskStr = GetStringAsync(requestForServer, runAsyncClient);
+                            if (await Task.WhenAny(taskStr, Task.Delay(20000)) == taskStr)
                             {
-                                Console.WriteLine(task.Result);
+                                Console.WriteLine(taskStr.Result);
                                 numRequests++;
                             }
                             else
@@ -384,10 +388,10 @@ namespace SecuroteckClient
                             {
                                 case "get":
                                     {
-                                        task = GetStringAsync(requestForServer, runAsyncClient);
-                                        if (await Task.WhenAny(task, Task.Delay(20000)) == task)
+                                        taskStr = GetStringAsync(requestForServer, runAsyncClient);
+                                        if (await Task.WhenAny(taskStr, Task.Delay(20000)) == taskStr)
                                         {
-                                            Console.WriteLine(task.Result);
+                                            Console.WriteLine(taskStr.Result);
                                             numRequests++;
                                         }
                                         else
@@ -400,26 +404,104 @@ namespace SecuroteckClient
                                     break;
                                 case "new":
                                     {
-                                        task = PostStringAsync(requestForServer, runAsyncClient, userPostName);
-                                        if (await Task.WhenAny(task, Task.Delay(20000)) == task)
+                                        taskStr = PostStringAsync(requestForServer, runAsyncClient, userPostName);
+                                        if (await Task.WhenAny(taskStr, Task.Delay(20000)) == taskStr)
                                         {
-                                            Console.WriteLine(task.Result);
+                                            Console.WriteLine("Got API key.");
+                                            string storedApiKeyStr = taskStr.Result.Replace("\"", "");
+                                            storedApiKey = Guid.Parse(storedApiKeyStr);
+                                            
                                             numRequests++;
                                         }
+
                                         else
                                         {
                                             Console.WriteLine("Request timed out");
                                         }
                                         break;
                                     }
-                                    
+
                                 case "delete":
-                                    break;
+                                    {
+                                        taskBool = Delete(requestForServer, client);
+                                        if (taskBool.Result == true)
+                                            Console.WriteLine("True");
+                                        else if (taskBool.Result == false)
+                                            Console.WriteLine("False");
+
+                                        break;
+                                    }
                             }
                             break;
                         }
                     case "protected":
-                        break;
+                        {
+                            switch (action)
+                            {
+                                case "hello":
+                                    {
+                                        Guid emptyGuid = Guid.Parse("00000000-0000-0000-0000-000000000000");
+                                        if (storedApiKey.Equals(emptyGuid))
+                                        {
+                                            Console.WriteLine("You need to do a User Post or User Set first.");
+                                        }
+                                        else if (storedApiKey != null)
+                                        {
+                                            string storedApikeyStr = storedApiKey.ToString();
+                                            client.DefaultRequestHeaders.Add("apikey", storedApikeyStr);
+                                            taskStr = GetStringAsync(requestForServer, client);
+                                            if (await Task.WhenAny(taskStr, Task.Delay(20000)) == taskStr)
+                                            {
+                                                Console.WriteLine(taskStr.Result);
+                                                numRequests++;
+                                            }
+                                        }
+                                        break;
+                                    }
+                                case "sha1":
+                                    {
+                                        Guid emptyGuid = Guid.Parse("00000000-0000-0000-0000-000000000000");
+                                        if (storedApiKey.Equals(emptyGuid))
+                                        {
+                                            Console.WriteLine("You need to do a User Post or User Set first.");
+                                        }
+                                        else if (storedApiKey != null)
+                                        {
+                                            string storedApikeyStr = storedApiKey.ToString();
+                                            client.DefaultRequestHeaders.Add("apikey", storedApikeyStr);
+                                            taskStr = GetStringAsync(requestForServer, client);
+                                            if (await Task.WhenAny(taskStr, Task.Delay(20000)) == taskStr)
+                                            {
+                                                Console.WriteLine(taskStr.Result);
+                                                numRequests++;
+                                            }
+                                        }
+                                        break;
+                                    }
+                                case "sha256":
+                                    {
+                                        Guid emptyGuid = Guid.Parse("00000000-0000-0000-0000-000000000000");
+                                        if (storedApiKey.Equals(emptyGuid))
+                                        {
+                                            Console.WriteLine("You need to do a User Post or User Set first.");
+                                        }
+                                        else if (storedApiKey != null)
+                                        {
+                                            string storedApikeyStr = storedApiKey.ToString();
+                                            client.DefaultRequestHeaders.Add("apikey", storedApikeyStr);
+                                            taskStr = GetStringAsync(requestForServer, client);
+                                            if (await Task.WhenAny(taskStr, Task.Delay(20000)) == taskStr)
+                                            {
+                                                Console.WriteLine(taskStr.Result);
+                                                numRequests++;
+                                            }
+                                        }
+                                        break;
+                                    }
+                            }
+
+                            break;
+                        }
                 }
 
 
@@ -445,28 +527,24 @@ namespace SecuroteckClient
         {
             Console.WriteLine("...please wait...");
             string responseString = "";
-            StringContent request = new StringContent(requestBody);
-            HttpResponseMessage response = await client.PostAsJsonAsync(path, request);
+            HttpResponseMessage response = await client.PostAsJsonAsync(path, requestBody);
             responseString = await response.Content.ReadAsStringAsync();
+            if (response.StatusCode == HttpStatusCode.OK)
+            {
+                storedUsername = requestBody;
 
+            }
             return responseString;
         }
-
-        /*static async Task<string> SetStringAsync(string path, HttpClient client, string requestBody)
+        static async Task<bool> Delete(string path, HttpClient client)
         {
-            Console.WriteLine("...please wait...");
-            string responseString = "";
-            HttpResponseMessage response = await client.PutAsync(path, HttpContent);
-            responseString = await response.Content.ReadAsStringAsync();
-
-
-            return responseString;
-        }
-        static async Task<bool> DeleteAsync(string path, HttpClient client, string requestBody)
-        {
+            //path += storedUsername;
             Console.WriteLine("...please wait...");
             bool userDeleted = false;
-            HttpResponseMessage response = await client.DeleteAsync(path, HttpContent);
+            string storedApiKeyStr = storedApiKey.ToString();
+            client.DefaultRequestHeaders.Add("apikey", storedApiKeyStr);
+            
+            HttpResponseMessage response = await client.DeleteAsync(path); 
             string userDeletedStr = await response.Content.ReadAsStringAsync();
 
             switch (userDeletedStr)
@@ -480,7 +558,18 @@ namespace SecuroteckClient
             }
 
             return userDeleted;
-        }*/
+        }
+        /*static async Task<string> SetStringAsync(string path, HttpClient client, string requestBody)
+        {
+            Console.WriteLine("...please wait...");
+            string responseString = "";
+            HttpResponseMessage response = await client.PutAsJsonAsync(path, HttpContent);
+            responseString = await response.Content.ReadAsStringAsync();
+
+
+            return responseString;
+        }
+        */
 
     }
     #endregion
