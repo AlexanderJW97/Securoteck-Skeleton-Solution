@@ -91,5 +91,27 @@ namespace SecuroteckWebApplication.Controllers
             return Request.CreateResponse<string>( statusCode, response);
         }
 
+        [CustomAuthorise]
+        [ActionName("GetPublicKey")]
+        public HttpResponseMessage GetPublicKey(HttpRequestMessage request)
+        {
+            bool userExists = false;
+            string response = "Bad Request";
+            HttpStatusCode statusCode = HttpStatusCode.BadRequest;
+
+            string apiKey = request.Headers.GetValues("ApiKey").FirstOrDefault();
+
+            using (var rsa = WebApiConfig.RSA)
+            {
+                if (userExists = UserDatabaseAccess.checkUserKey(apiKey))
+                {
+                    var publicKeyXML = rsa.ToXmlString(false);
+                    response = publicKeyXML;
+                    statusCode = HttpStatusCode.OK;
+                }
+            }
+
+            return Request.CreateResponse<string>(statusCode, response);
+        }
     }
 }

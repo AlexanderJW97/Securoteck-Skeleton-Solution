@@ -40,27 +40,33 @@ namespace SecuroteckClient
                 HttpClient client = new HttpClient();
                 client.BaseAddress = new Uri("http://localhost:" + portNumber + "/api/");
                 client.Timeout = TimeSpan.FromMilliseconds(20000);
-                //client.MaxResponseContentBufferSize = 
+                string determineFunctionString = "";
 
                 if (numRequests > 0)
                     request = Restart();
-
-                string determineFunctionString = DetermineFunction(request);
-
-                if (determineFunctionString != "Exit")
+                if (request == "")
                 {
+                    Console.WriteLine("Please enter a command before pressing the enter key.");
+                    numRequests++;
+                }
+                if (request == "Exit")
+                {
+                    userExitRequest = true;
+                }
+                else if (request != "")
+                {
+                    determineFunctionString = DetermineFunction(request);
                     function = determineFunctionString.Split('/');
                     requestForServer = launchFunction(function, request);
                     RunAsync(requestForServer, client, controller, action).Wait();
                 }
-                else
-                {
-                    userExitRequest = true;
-                }
+                
+                request = null;
+                
+            }
+            while (userExitRequest == false);
 
-
-            } while (userExitRequest == false);
-
+        
         }
 
         /// <summary>
@@ -410,7 +416,7 @@ namespace SecuroteckClient
                                             Console.WriteLine("Got API key.");
                                             string storedApiKeyStr = taskStr.Result.Replace("\"", "");
                                             storedApiKey = Guid.Parse(storedApiKeyStr);
-                                            
+
                                             numRequests++;
                                         }
 
@@ -543,8 +549,8 @@ namespace SecuroteckClient
             bool userDeleted = false;
             string storedApiKeyStr = storedApiKey.ToString();
             client.DefaultRequestHeaders.Add("apikey", storedApiKeyStr);
-            
-            HttpResponseMessage response = await client.DeleteAsync(path); 
+
+            HttpResponseMessage response = await client.DeleteAsync(path);
             string userDeletedStr = await response.Content.ReadAsStringAsync();
 
             switch (userDeletedStr)
