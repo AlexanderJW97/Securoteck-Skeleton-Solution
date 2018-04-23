@@ -22,6 +22,8 @@ namespace SecuroteckClient
         private static string requestForServer = "";
         private static string storedUsername = "";
         private static Guid storedApiKey;
+        private static Guid emptyGuid = new Guid("00000000 - 0000 - 0000 - 0000 - 000000000000");
+        private static string emptyGuidStr = emptyGuid.ToString();
         private static bool userExitRequest = false;
         private static int numRequests = 0;
         private static string userPostName = "";
@@ -170,23 +172,26 @@ namespace SecuroteckClient
 
                 case "Protected":
                     {
+                        controller = "protected";
                         switch (action)
                         {
                             case "Hello":
-                                controller = "protected";
                                 action = "hello";
                                 request = ProtectedHello(controller, action);
                                 break;
                             case "SHA1":
-                                controller = "protected";
                                 action = "sha1";
                                 request = ProtectedSHA1(controller, action, originalRequest);
                                 break;
                             case "SHA256":
-                                controller = "protected";
                                 action = "sha256";
                                 request = ProtectedSHA256(controller, action, originalRequest);
                                 break;
+                            case "Get":
+                                action = "getpublickey";
+                                request = GetPublicKey(controller, action, originalRequest);
+                                break;
+
                         }
                     }
                     break;
@@ -196,12 +201,26 @@ namespace SecuroteckClient
 
         }
 
+        private static string GetPublicKey(string controller, string action, string originalRequest)
+        {
+            string storedApiKeyStr = storedApiKey.ToString();
+            if (storedApiKeyStr == emptyGuidStr)
+            {
+                Console.WriteLine("You need to do a User Post or User Set first"); 
+            }
+            else
+            {
+                requestForServer += controller + "/" + action;
+            }
+            return requestForServer;
+        }
+
         private static string ProtectedSHA1(string controller, string action, string originalRequest)
         {
             string[] requestParts = originalRequest.Split(' ');
             string message = requestParts[2];
             string storedApiKeyStr = storedApiKey.ToString();
-            if (storedApiKeyStr == "")
+            if (storedApiKeyStr == emptyGuidStr)
             {
                 Console.WriteLine("You need to do a User Post or User Set first");
             }
@@ -217,7 +236,7 @@ namespace SecuroteckClient
             string[] requestParts = originalRequest.Split(' ');
             string message = requestParts[2];
             string storedApiKeyStr = storedApiKey.ToString();
-            if (storedApiKeyStr == "")
+            if (storedApiKeyStr == emptyGuidStr)
             {
                 Console.WriteLine("You need to do a User Post or User Set first");
             }
@@ -231,7 +250,7 @@ namespace SecuroteckClient
         private static string ProtectedHello(string controller, string action)
         {
             string storedApiKeyStr = storedApiKey.ToString();
-            if (storedApiKeyStr == "")
+            if (storedApiKeyStr == emptyGuidStr)
             {
                 Console.WriteLine("You need to do a User Post or User Set first");
             }
@@ -247,7 +266,7 @@ namespace SecuroteckClient
             string[] requestParts = originalRequest.Split(' ');
 
             string storedApiKeyStr = storedApiKey.ToString();
-            if (storedUsername == "" && storedApiKeyStr == "")
+            if (storedUsername == "" && storedApiKeyStr == emptyGuidStr)
             {
                 Console.WriteLine("You need to do a User Post or User Set ");
             }
@@ -529,6 +548,18 @@ namespace SecuroteckClient
             return responseString;
         }
 
+        static async Task<string> GetPublicKeyStringAsync(string path, HttpClient client)
+        {
+            Console.WriteLine("...please wait...");
+            string responseString = "";
+            string storedApiKeyStr = storedApiKey.ToString();
+            client.DefaultRequestHeaders.Add("apikey", storedApiKeyStr);
+            HttpResponseMessage response = await client.GetAsync(path);
+            responseString = await response.Content.ReadAsStringAsync();
+
+            return responseString;
+        }
+
         static async Task<string> PostStringAsync(string path, HttpClient client, string requestBody)
         {
             Console.WriteLine("...please wait...");
@@ -544,7 +575,6 @@ namespace SecuroteckClient
         }
         static async Task<bool> Delete(string path, HttpClient client)
         {
-            //path += storedUsername;
             Console.WriteLine("...please wait...");
             bool userDeleted = false;
             string storedApiKeyStr = storedApiKey.ToString();
