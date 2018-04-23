@@ -10,18 +10,14 @@ namespace SecuroteckWebApplication
     public static class WebApiConfig
     {
         // Publically accessible global static variables could go here
-        public static RSACryptoServiceProvider RSA;
-        
+
         public static void Register(HttpConfiguration config)
         {
-
             // Web API configuration and services
             GlobalConfiguration.Configuration.MessageHandlers.Add(new APIAuthorisationHandler());
 
-            #region Task 9
-            RSA = new RSACryptoServiceProvider();
-            var publicKeyXml = RSA.ToXmlString(false);
-
+            #region Task 7
+            // Configuration for Task 9
             #endregion
 
 
