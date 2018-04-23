@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -91,5 +92,55 @@ namespace SecuroteckWebApplication.Controllers
             return Request.CreateResponse<string>( statusCode, response);
         }
 
+
+        [CustomAuthorise]
+        [ActionName("GetPublicKey")]
+        public HttpResponseMessage GetPublicKey(HttpRequestMessage request)
+        {
+            bool userExists = false;
+            string response = "Bad Request";
+            HttpStatusCode statusCode = HttpStatusCode.BadRequest;
+
+            string apiKey = request.Headers.GetValues("ApiKey").FirstOrDefault();
+
+            using (var rsa = WebApiConfig.RSA)
+            {
+                if (userExists = UserDatabaseAccess.checkUserKey(apiKey))
+                {
+                    var publicKeyXML = rsa.ToXmlString(false);
+                    response = publicKeyXML;
+                    statusCode = HttpStatusCode.OK;
+                }
+            }
+
+            return Request.CreateResponse<string>(statusCode, response);
+        }
+
+        [CustomAuthorise]
+        [ActionName("Sign")]
+        public HttpResponseMessage Get(HttpRequestMessage request, [FromUri] string message)
+        {
+            bool userExists = false;
+            string response = "Bad Request";
+            HttpStatusCode statusCode = HttpStatusCode.BadRequest;
+
+            string apiKey = request.Headers.GetValues("ApiKey").FirstOrDefault();
+
+            using (var rsa = WebApiConfig.RSA)
+            {
+                if (userExists = UserDatabaseAccess.checkUserKey(apiKey))
+                {
+                    byte[] signedMessage;
+                    byte[] messageBytes = Encoding.ASCII.GetBytes(message);
+                    RSAParameters privateKey = rsa.ExportParameters(true);
+                    SHA1CryptoServiceProvider sha1 = new SHA1CryptoServiceProvider();
+                    rsa.ImportParameters(privateKey);
+                    signedMessage = rsa.SignData(messageBytes, sha1);
+                    response = BitConverter.ToString(signedMessage);
+                    statusCode = HttpStatusCode.OK;
+                }
+            }
+            return Request.CreateResponse<string>(statusCode, response);
+        }
     }
 }
