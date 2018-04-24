@@ -126,17 +126,22 @@ namespace SecuroteckWebApplication.Controllers
 
             string apiKey = request.Headers.GetValues("ApiKey").FirstOrDefault();
 
-            using (var rsa = WebApiConfig.RSA)
+            RSACryptoServiceProvider rsa = WebApiConfig.RSA;
+
+            using (rsa)
             {
                 if (userExists = UserDatabaseAccess.checkUserKey(apiKey))
                 {
                     byte[] signedMessage;
+
                     byte[] messageBytes = Encoding.ASCII.GetBytes(message);
-                    RSAParameters privateKey = rsa.ExportParameters(true);
+                    
                     SHA1CryptoServiceProvider sha1 = new SHA1CryptoServiceProvider();
-                    rsa.ImportParameters(privateKey);
+                    
                     signedMessage = rsa.SignData(messageBytes, sha1);
+
                     response = BitConverter.ToString(signedMessage);
+
                     statusCode = HttpStatusCode.OK;
                 }
             }

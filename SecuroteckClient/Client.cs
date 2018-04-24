@@ -28,16 +28,13 @@ namespace SecuroteckClient
         private static int numRequests = 0;
         private static string userPostName = "";
         private static string publickey = "";
-
+        private static string unsignedMessage = "";
+        private static RSACryptoServiceProvider rsa = new RSACryptoServiceProvider();
 
 
         static void Main(string[] args)
         {
-
-
-
             request = Start();
-
             do
             {
                 HttpClient client = new HttpClient();
@@ -205,10 +202,13 @@ namespace SecuroteckClient
             else
             {
                 string[] requestParts = originalRequest.Split(' ');
-                string message = "";
                 for (int i = 2; i < requestParts.Length; i++)
-                    message += requestParts[i];
-                requestForServer += controller + "/" + action + "?message=" + message;
+                    unsignedMessage += requestParts[i] + " ";
+
+                if (unsignedMessage != "")
+                    requestForServer += controller + "/" + action + "?message=" + unsignedMessage;
+                else
+                    Console.WriteLine("Please add a message to the end of your request");
             }
             return requestForServer;
 
@@ -549,9 +549,18 @@ namespace SecuroteckClient
                                             {
                                                 if (taskStr.Result != null)
                                                 {
-                                                    var key = taskStr.Result;
-                                                    publickey = XmlConvert.ToString(key);
+                                                    publickey = taskStr.Result;
+
+                                                    var byteKey = Encoding.ASCII.GetBytes(publickey);
+
+                                                    var parameters = rsa.ExportParameters(false);
+
+                                                    parameters.Modulus = byteKey;
+
+                                                    rsa.ImportParameters(parameters);
+
                                                     Console.WriteLine("Got Public Key");
+
                                                     numRequests++;
                                                 }
                                                 else
@@ -571,17 +580,29 @@ namespace SecuroteckClient
                                         else if (storedApiKey != null)
                                         {
                                             string storedApikeyStr = storedApiKey.ToString();
+
                                             client.DefaultRequestHeaders.Add("apikey", storedApikeyStr);
+
                                             taskStr = GetStringAsync(requestForServer, client);
+
                                             if (await Task.WhenAny(taskStr, Task.Delay(20000)) == taskStr)
                                             {
                                                 if (taskStr.Result != null)
                                                 {
-                                                    publickey = taskStr.Result;
-                                                    RSACryptoServiceProvider rsa = new RSACryptoServiceProvider();
-                                                    rsa.FromXmlString(publickey);
-                                                    RSAParameters pubKey = rsa.ToXMLString();
-                                                    Console.WriteLine("Message was successfully signed");
+                                                    byte[] returnedMessage = Encoding.ASCII.GetBytes(taskStr.Result);
+
+                                                    var bytes = Encoding.ASCII.GetBytes(unsignedMessage);
+
+                                                    SHA1CryptoServiceProvider sha1hash = new SHA1CryptoServiceProvider();
+
+                                                    byte[] hashdata = sha1hash.ComputeHash(bytes);
+
+                                                    RSACryptoServiceProvider hashVerifyRSA = new RSACryptoServiceProvider();
+                                                    hashVerifyRSA.FromXmlString(publickey);
+                                                    if (hashVerifyRSA.VerifyHash(hashdata, "sha1", returnedMessage))
+                                                    {
+                                                        Console.WriteLine("Message was successfully signed");
+                                                    }
                                                     numRequests++;
                                                 }
                                                 else
